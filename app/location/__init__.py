@@ -1,10 +1,20 @@
 """app.location"""
+from typing import List
 from ..coordinates import Coordinates
 from ..utils import countries
 from ..utils.populations import country_population
 
+from abc import ABC, abstractmethod
+
+
+# Apply Composite pattern
+# Why - we can linked the Timelined Location to Location with the same country
+# Or when we want to link countries to the country from the same area
+
+
 
 # pylint: disable=redefined-builtin,invalid-name
+# composite element, can have parent and child
 class Location:  # pylint: disable=too-many-instance-attributes
     """
     A location in the world affected by the coronavirus.
@@ -26,6 +36,28 @@ class Location:  # pylint: disable=too-many-instance-attributes
         self.confirmed = confirmed
         self.deaths = deaths
         self.recovered = recovered
+        #children list, must be private so it does not get inherited
+        self._childern = []
+        # parent element
+        self.parent = None
+
+    #parent getter
+    def getparent(self) -> Location:
+        return self.parent
+
+    #parent setter
+    def setparent(self, parent: Location):
+        self.parent = parent
+
+    #child setter
+    def addchild(self, location: TimelinedLocation) -> None:
+        self._childern.append(location)
+        location.parent = self
+
+    #child remover
+    def removechild(self, location: TimelinedLocation) -> None:
+        self._childern.remove(location)
+        location.parent = None
 
     @property
     def country_code(self):
@@ -74,6 +106,8 @@ class Location:  # pylint: disable=too-many-instance-attributes
         }
 
 
+    
+#leaf object, can have parent only
 class TimelinedLocation(Location):
     """
     A location with timelines.
@@ -122,3 +156,20 @@ class TimelinedLocation(Location):
 
         # Return the serialized location.
         return serialized
+
+    #parent getter
+    def getparent(self) ->Location:
+        return self.parent
+
+    #parent setter
+    def setparent(self, parent: Location):
+        self.parent = parent
+        parent._childern.append(self)
+
+    #unlink parent
+    def unparent(self):
+        self.parent._childern.remove(self)
+        self.parent = None
+
+    #leaf object can not have child
+
